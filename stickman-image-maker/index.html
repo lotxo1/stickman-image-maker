@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stickman Image Maker</title>
+<meta name="description" content="Turn any scene into a 16:9 stickman cartoon image for faceless YouTube videos. Sign in with Pollinations and use your own Pollen.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='14' r='9' fill='none' stroke='%23111' stroke-width='4'/%3E%3Cpath d='M32 23v20M32 30l-12 8M32 30l12-6M32 43l-10 16M32 43l10 16' stroke='%23111' stroke-width='4' stroke-linecap='round' fill='none'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #fbf8f1;
+    --card: #ffffff;
+    --ink: #1b1b1f;
+    --muted: #6b6b75;
+    --line: #e4dfd3;
+    --accent: #ff5a36;
+    --accent-ink: #ffffff;
+    --soft: #fff1ec;
+    --radius: 16px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141417;
+      --card: #1e1e23;
+      --ink: #f2f0ea;
+      --muted: #a3a2ab;
+      --line: #33333b;
+      --accent: #ff6b4a;
+      --accent-ink: #ffffff;
+      --soft: #2a1e1b;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 20px 16px 40px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand svg { width: 40px; height: 40px; flex: none; }
+  .brand h1 { font-size: 1.35rem; margin: 0; letter-spacing: -0.01em; }
+  .brand p { margin: 0; color: var(--muted); font-size: .9rem; }
+  .user { display: flex; align-items: center; gap: 10px; font-size: .9rem; color: var(--muted); }
+  button, select, textarea, input { font: inherit; color: inherit; }
+  .btn {
+    border: 0; border-radius: 999px; padding: 12px 20px; cursor: pointer;
+    background: var(--accent); color: var(--accent-ink); font-weight: 650;
+  }
+  .btn:disabled { opacity: .55; cursor: wait; }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); padding: 8px 14px; font-weight: 550; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 18px; margin-top: 18px;
+  }
+  .hero { text-align: center; padding: 34px 18px; }
+  .hero h2 { margin: 0 0 8px; font-size: 1.5rem; }
+  .hero p { margin: 0 auto 18px; max-width: 520px; color: var(--muted); }
+  label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 6px; }
+  textarea {
+    width: 100%; min-height: 96px; resize: vertical; padding: 12px;
+    border-radius: 12px; border: 1.5px solid var(--line); background: var(--bg);
+  }
+  textarea:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+  @media (max-width: 640px) { .row { grid-template-columns: 1fr; } }
+  select { width: 100%; padding: 10px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--bg); }
+  .check { display: flex; align-items: center; gap: 8px; font-weight: 500; margin-top: 14px; font-size: .92rem; }
+  .actions { display: flex; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+  .hint { color: var(--muted); font-size: .85rem; }
+  .examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .chip {
+    border: 1px solid var(--line); background: var(--bg); border-radius: 999px;
+    padding: 5px 12px; font-size: .82rem; cursor: pointer;
+  }
+  .stage {
+    position: relative; aspect-ratio: 16 / 9; width: 100%; border-radius: 12px; overflow: hidden;
+    background: var(--bg); border: 1.5px dashed var(--line); display: grid; place-items: center;
+  }
+  .stage img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .stage .empty { color: var(--muted); text-align: center; padding: 16px; }
+  .spinner {
+    width: 42px; height: 42px; border-radius: 50%; border: 4px solid var(--line);
+    border-top-color: var(--accent); animation: spin .9s linear infinite; margin: 0 auto 10px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error { background: var(--soft); border: 1px solid var(--accent); color: var(--ink); border-radius: 12px; padding: 10px 14px; margin-top: 14px; display: none; }
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+  .gallery img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 10px; cursor: pointer; border: 1px solid var(--line); }
+  footer { margin-top: 28px; text-align: center; color: var(--muted); font-size: .85rem; }
+  footer img { height: 32px; vertical-align: middle; }
+  a { color: var(--accent); }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="14" r="9" fill="none" stroke="currentColor" stroke-width="4"/><path d="M32 23v20M32 30l-12 8M32 30l12-6M32 43l-10 16M32 43l10 16" stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none"/></svg>
+      <div>
+        <h1>Stickman Image Maker</h1>
+        <p>16:9 stickman cartoons for faceless YouTube videos</p>
+      </div>
+    </div>
+    <div class="user">
+      <span id="userName"></span>
+      <button id="signOutBtn" class="btn ghost hidden">Sign out</button>
+    </div>
+  </header>
+
+  <!-- Signed out -->
+  <section id="signedOut" class="card hero">
+    <h2>Describe a scene, get a stickman cartoon</h2>
+    <p>Sign in with your Pollinations account. Images are paid with your own Pollen (from 0.002 Pollen per image). No sign-up here, no secret keys.</p>
+    <button id="signInBtn" class="btn">Sign in with Pollinations</button>
+  </section>
+
+  <!-- Signed in -->
+  <section id="signedIn" class="hidden">
+    <div class="card">
+      <label for="scene">Your scene</label>
+      <textarea id="scene" maxlength="600" placeholder="e.g. A stickman staring at a giant clock, wondering why time feels faster as you get older"></textarea>
+      <div class="examples" id="examples"></div>
+
+      <div class="row">
+        <div>
+          <label for="style">Style</label>
+          <select id="style">
+            <option value="white">Classic (white background)</option>
+            <option value="color">Colorful background</option>
+            <option value="chalk">Chalkboard</option>
+          </select>
+        </div>
+        <div>
+          <label for="model">Model</label>
+          <select id="model">
+            <option value="black-forest-labs/flux.1-schnell">FLUX.1 Schnell · 0.002 Pollen</option>
+            <option value="tongyi-mai/z-image-turbo">Z-Image Turbo · 0.004 Pollen</option>
+            <option value="black-forest-labs/flux.2-klein-4b">FLUX.2 Klein · 0.005 Pollen</option>
+          </select>
+        </div>
+        <div>
+          <label for="size">Size (16:9)</label>
+          <select id="size">
+            <option value="1280x720">1280 × 720 (HD)</option>
+            <option value="1024x576">1024 × 576 (small)</option>
+          </select>
+        </div>
+      </div>
+
+      <label class="check"><input type="checkbox" id="keepSeed"> Keep the same seed (more consistent look between images)</label>
+
+      <div class="actions">
+        <button id="generateBtn" class="btn">Generate image</button>
+        <span class="hint">Ctrl + Enter also works</span>
+      </div>
+      <div id="error" class="error" role="alert"></div>
+    </div>
+
+    <div class="card">
+      <div class="stage" id="stage">
+        <div class="empty" id="stageEmpty">Your image will appear here</div>
+        <div class="empty hidden" id="stageLoading"><div class="spinner"></div>Drawing your stickman…</div>
+        <img id="result" class="hidden" alt="Generated stickman cartoon">
+      </div>
+      <div class="actions">
+        <a id="downloadBtn" class="btn ghost hidden" download="stickman.jpg">Download image</a>
+        <span class="hint" id="meta"></span>
+      </div>
+    </div>
+
+    <div class="card hidden" id="historyCard">
+      <label>This session</label>
+      <div class="gallery" id="gallery"></div>
+    </div>
+  </section>
+
+  <footer>
+    <a href="https://pollinations.ai/?ref=badge" target="_blank" rel="noopener">
+      <img src="https://raw.githubusercontent.com/pollinations/pollinations/main/packages/ui/src/brand/badge-made-with.svg" alt="Made with pollinations.ai">
+    </a>
+    <p>Images are generated by <a href="https://pollinations.ai" target="_blank" rel="noopener">pollinations.ai</a> and billed to your own Pollen balance.</p>
+  </footer>
+</div>
+
+<script>
+// ---- Settings ----
+// App Key (pk_) from enter.pollinations.ai. It is public and safe to include here.
+const APP_KEY = "pk_swO0SlDTFn5yGfAR";
+const REDIRECT_URI = "https://lotxo1.github.io/stickman-image-maker/";
+const ALLOWED_MODELS = [
+  "black-forest-labs/flux.1-schnell",
+  "tongyi-mai/z-image-turbo",
+  "black-forest-labs/flux.2-klein-4b"
+];
+const AUTH_URL = "https://enter.pollinations.ai/authorize";
+const TOKEN_URL = "https://enter.pollinations.ai/api/oauth/token";
+const USERINFO_URL = "https://enter.pollinations.ai/api/oauth/userinfo";
+const IMAGE_URL = "https://gen.pollinations.ai/image/";
+
+const STYLES = {
+  white: "simple 2D stickman cartoon, black stick figures with round white heads and simple dot eyes, thick clean black outlines, flat minimal style, plain white background, a few simple props, clear readable composition, funny and expressive, no text, no letters",
+  color: "simple 2D stickman cartoon, black stick figures with round white heads and simple dot eyes, thick clean black outlines, flat minimal style, simple soft pastel colored background scenery, clear readable composition, funny and expressive, no text, no letters",
+  chalk: "simple stickman drawing in white chalk on a dark green chalkboard, round heads and simple dot eyes, hand drawn chalk lines, minimal props, clear readable composition, funny and expressive, no text, no letters"
+};
+const EXAMPLES = [
+  "A stickman looking up at the night sky, wondering how far the stars are",
+  "A stickman drinking a glass of water that is bigger than him",
+  "Two stickmen arguing over whether a hot dog is a sandwich",
+  "A stickman falling asleep at his desk while a clock spins"
+];
+
+// ---- Small helpers ----
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} },
+  del(k) { try { sessionStorage.removeItem(k); } catch (e) {} }
+};
+let token = store.get("sim_token");
+let seed = Math.floor(Math.random() * 1e9);
+let busy = false;
+
+function b64url(bytes) {
+  let s = "";
+  bytes.forEach((b) => (s += String.fromCharCode(b)));
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function randomString(n) {
+  const a = new Uint8Array(n);
+  crypto.getRandomValues(a);
+  return b64url(a);
+}
+async function sha256(text) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return b64url(new Uint8Array(buf));
+}
+function showError(msg) {
+  const el = $("error");
+  el.textContent = msg;
+  el.style.display = msg ? "block" : "none";
+}
+
+// ---- Sign in (OAuth code flow with PKCE, no server needed) ----
+async function signIn() {
+  if (APP_KEY.indexOf("REPLACE") !== -1) {
+    alert("This app is not configured yet: the App Key is missing.");
+    return;
+  }
+  const verifier = randomString(48);
+  const state = randomString(16);
+  store.set("sim_verifier", verifier);
+  store.set("sim_state", state);
+  const params = new URLSearchParams({
+    response_type: "code",
+    client_id: APP_KEY,
+    redirect_uri: REDIRECT_URI,
+    scope: "profile",
+    state: state,
+    code_challenge: await sha256(verifier),
+    code_challenge_method: "S256",
+    models: ALLOWED_MODELS.join(",")
+  });
+  location.href = AUTH_URL + "?" + params.toString();
+}
+
+async function handleRedirect() {
+  const q = new URLSearchParams(location.search);
+  const hash = new URLSearchParams(location.hash.slice(1));
+  const clean = () => history.replaceState(null, "", location.pathname);
+
+  // Older fragment flow, just in case
+  if (hash.get("api_key")) {
+    token = hash.get("api_key");
+    store.set("sim_token", token);
+    clean();
+    return;
+  }
+  if (q.get("error") || hash.get("error")) {
+    clean();
+    showErrorLater("Sign-in was cancelled.");
+    return;
+  }
+  const code = q.get("code");
+  if (!code) return;
+
+  const expectedState = store.get("sim_state");
+  const verifier = store.get("sim_verifier");
+  store.del("sim_state");
+  store.del("sim_verifier");
+  clean();
+  if (!expectedState || q.get("state") !== expectedState || !verifier) {
+    showErrorLater("Sign-in failed (security check). Please try again.");
+    return;
+  }
+  try {
+    const res = await fetch(TOKEN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        code: code,
+        client_id: APP_KEY,
+        redirect_uri: REDIRECT_URI,
+        code_verifier: verifier
+      })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.access_token) throw new Error(data.error_description || data.error || res.status);
+    token = data.access_token;
+    store.set("sim_token", token);
+  } catch (e) {
+    showErrorLater("Sign-in failed: " + e.message + ". Please try again.");
+  }
+}
+let pendingError = "";
+function showErrorLater(msg) { pendingError = msg; }
+
+function signOut() {
+  token = null;
+  store.del("sim_token");
+  render();
+}
+
+async function loadUser() {
+  try {
+    const res = await fetch(USERINFO_URL, { headers: { Authorization: "Bearer " + token } });
+    if (res.status === 401) return signOut();
+    if (!res.ok) return;
+    const u = await res.json();
+    const name = u.name || u.preferred_username || u.username || "";
+    if (name) $("userName").textContent = "Signed in as " + name;
+  } catch (e) { /* name is optional */ }
+}
+
+// ---- Image generation ----
+function buildPrompt(scene) {
+  return scene.trim().replace(/\s+/g, " ") + ". " + STYLES[$("style").value];
+}
+
+async function generate() {
+  if (busy) return;
+  const scene = $("scene").value.trim();
+  if (!scene) { showError("Write a scene first."); $("scene").focus(); return; }
+  showError("");
+  if (!$("keepSeed").checked) seed = Math.floor(Math.random() * 1e9);
+  const [w, h] = $("size").value.split("x");
+  const model = $("model").value;
+  const params = new URLSearchParams({ model: model, width: w, height: h, seed: String(seed) });
+  const url = IMAGE_URL + encodeURIComponent(buildPrompt(scene)) + "?" + params.toString();
+
+  busy = true;
+  $("generateBtn").disabled = true;
+  $("stageEmpty").classList.add("hidden");
+  $("result").classList.add("hidden");
+  $("stageLoading").classList.remove("hidden");
+  $("downloadBtn").classList.add("hidden");
+  $("meta").textContent = "";
+
+  try {
+    const res = await fetch(url, { headers: { Authorization: "Bearer " + token } });
+    if (!res.ok) {
+      let detail = "";
+      try { const j = await res.json(); detail = (j.error && (j.error.message || j.error)) || j.message || ""; } catch (e) {}
+      if (res.status === 401) { signOut(); throw new Error("Your sign-in expired. Please sign in again."); }
+      if (res.status === 402) throw new Error("Not enough Pollen in your account (or the app budget is used up).");
+      if (res.status === 429) throw new Error("Too many requests. Wait a few seconds and try again.");
+      throw new Error("Generation failed (" + res.status + ")" + (detail ? ": " + detail : ""));
+    }
+    const blob = await res.blob();
+    const objUrl = URL.createObjectURL(blob);
+    $("result").src = objUrl;
+    $("result").classList.remove("hidden");
+    $("downloadBtn").href = objUrl;
+    $("downloadBtn").download = "stickman-" + seed + ".jpg";
+    $("downloadBtn").classList.remove("hidden");
+    $("meta").textContent = "Seed " + seed + " · " + $("model").selectedOptions[0].text;
+    addToGallery(objUrl, seed);
+  } catch (e) {
+    if (!$("result").src) $("stageEmpty").classList.remove("hidden");
+    else $("result").classList.remove("hidden");
+    showError(e.message || "Something went wrong.");
+  } finally {
+    $("stageLoading").classList.add("hidden");
+    $("generateBtn").disabled = false;
+    busy = false;
+  }
+}
+
+function addToGallery(src, s) {
+  const img = document.createElement("img");
+  img.src = src;
+  img.alt = "Stickman image, seed " + s;
+  img.title = "Seed " + s;
+  img.onclick = () => {
+    $("result").src = src;
+    $("result").classList.remove("hidden");
+    $("stageEmpty").classList.add("hidden");
+    $("downloadBtn").href = src;
+    $("downloadBtn").download = "stickman-" + s + ".jpg";
+    $("downloadBtn").classList.remove("hidden");
+  };
+  $("gallery").prepend(img);
+  $("historyCard").classList.remove("hidden");
+}
+
+// ---- Page setup ----
+function render() {
+  const inside = !!token;
+  $("signedOut").classList.toggle("hidden", inside);
+  $("signedIn").classList.toggle("hidden", !inside);
+  $("signOutBtn").classList.toggle("hidden", !inside);
+  if (!inside) $("userName").textContent = "";
+  else loadUser();
+}
+
+EXAMPLES.forEach((t) => {
+  const b = document.createElement("button");
+  b.className = "chip";
+  b.type = "button";
+  b.textContent = t;
+  b.onclick = () => { $("scene").value = t; $("scene").focus(); };
+  $("examples").appendChild(b);
+});
+$("signInBtn").onclick = signIn;
+$("signOutBtn").onclick = signOut;
+$("generateBtn").onclick = generate;
+$("scene").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) generate();
+});
+
+handleRedirect().then(() => {
+  render();
+  if (pendingError) {
+    if (token) showError(pendingError);
+    else alert(pendingError);
+  }
+});
+</script>
+</body>
+</html>
