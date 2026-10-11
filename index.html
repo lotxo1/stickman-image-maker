@@ -91,6 +91,14 @@
   .gallery img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 10px; cursor: pointer; border: 1px solid var(--line); }
   footer { margin-top: 28px; text-align: center; color: var(--muted); font-size: .85rem; }
   footer img { height: 32px; vertical-align: middle; }
+  @media (min-width: 960px) {
+    .wrap { max-width: 1240px; }
+    #signedIn:not(.hidden) { display: grid; grid-template-columns: 380px 1fr; gap: 18px; align-items: start; }
+    #signedIn .row { grid-template-columns: 1fr; gap: 10px; }
+    #signedIn #historyCard { grid-column: 1 / -1; margin-top: 0; }
+    #signedIn > .card { margin-top: 18px; }
+    #signedIn #historyCard { margin-top: 0; }
+  }
   a { color: var(--accent); }
   .hidden { display: none !important; }
 </style>
